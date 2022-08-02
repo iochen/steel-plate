@@ -9,7 +9,10 @@ readme = "README.md"
 homepage = "https://github.com/iochen/steel-plate"
 repository = "https://github.com/iochen/steel-plate"
 license = "MIT"
-
+exclude = [
+    "src/public/src_raw/*",
+    "rust.zip",
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

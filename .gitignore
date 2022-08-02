@@ -2,3 +2,4 @@
 /.idea/
 /rust.zip
 /.cargo/
+.DS_Store
