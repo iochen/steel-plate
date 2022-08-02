@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>我是钢板！</title>
+    <meta name="description" content="我是雪狐，我是钢板！">
+    <meta name="keywords" content="雪狐, 雪狐桑, 钢板">
+    <link rel="preload" as="image" href="/src/fox_style_a.webp">
+    <link rel="preload" as="image" href="/src/fox_style_b.webp">
+    <style>
+        html, body {
+            height: 100%;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            margin-top: 0;
+            background-image: url("/src/background-a.webp");
+            background-position: bottom;
+            background-size: cover;
+        }
+        #fox {
+            background-image: url("/src/fox_style_a.webp");
+            height: 0;
+            background: url("/src/fox_style_a.webp") no-repeat top;
+            background-size: contain;
+            width: 100%;
+            flex-grow: 1;
+            cursor: pointer;
+        }
+        #fox:active {
+            background: url("/src/fox_style_b.webp") no-repeat top;
+            background-size: contain;
+        }
+        #github {
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        #bilibili {
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+        .icon-size {
+            height: 8em;
+            width: 8em;
+            padding: 1em;
+        }
+        @media only screen and (max-width: 600px) {
+            .icon-size {
+                height: 3em;
+                width: 3em;
+                padding: 1em;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div id="github" class="icon-size">
+    <a href="https://github.com/iochen/steel-plate">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+            <path fill-rule="evenodd" clip-rule="evenodd"
+                  d="M8 0C3.58 0 0 3.58 0 8C0 11.54 2.29 14.53 5.47 15.59C5.87 15.66 6.02 15.42 6.02 15.21C6.02 15.02 6.01 14.39 6.01 13.72C4 14.09 3.48 13.23 3.32 12.78C3.23 12.55 2.84 11.84 2.5 11.65C2.22 11.5 1.82 11.13 2.49 11.12C3.12 11.11 3.57 11.7 3.72 11.94C4.44 13.15 5.59 12.81 6.05 12.6C6.12 12.08 6.33 11.73 6.56 11.53C4.78 11.33 2.92 10.64 2.92 7.58C2.92 6.71 3.23 5.99 3.74 5.43C3.66 5.23 3.38 4.41 3.82 3.31C3.82 3.31 4.49 3.1 6.02 4.13C6.66 3.95 7.34 3.86 8.02 3.86C8.7 3.86 9.38 3.95 10.02 4.13C11.55 3.09 12.22 3.31 12.22 3.31C12.66 4.41 12.38 5.23 12.3 5.43C12.81 5.99 13.12 6.7 13.12 7.58C13.12 10.65 11.25 11.33 9.47 11.53C9.76 11.78 10.01 12.26 10.01 13.01C10.01 14.08 10 14.94 10 15.21C10 15.42 10.15 15.67 10.55 15.59C13.71 14.53 16 11.53 16 8C16 3.58 12.42 0 8 0Z"
+                  transform="scale(64)" fill="#1B1F23"/>
+        </svg>
+    </a>
+</div>
+<div id="bilibili" class="icon-size">
+    <a href="https://space.bilibili.com/477792">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" ><title>Bilibili
+            icon</title>
+            <path d="M17.813 4.653h.854c1.51.054 2.769.578 3.773 1.574 1.004.995 1.524 2.249 1.56 3.76v7.36c-.036 1.51-.556 2.769-1.56 3.773s-2.262 1.524-3.773 1.56H5.333c-1.51-.036-2.769-.556-3.773-1.56S.036 18.858 0 17.347v-7.36c.036-1.511.556-2.765 1.56-3.76 1.004-.996 2.262-1.52 3.773-1.574h.774l-1.174-1.12a1.234 1.234 0 0 1-.373-.906c0-.356.124-.658.373-.907l.027-.027c.267-.249.573-.373.92-.373.347 0 .653.124.92.373L9.653 4.44c.071.071.134.142.187.213h4.267a.836.836 0 0 1 .16-.213l2.853-2.747c.267-.249.573-.373.92-.373.347 0 .662.151.929.4.267.249.391.551.391.907 0 .355-.124.657-.373.906zM5.333 7.24c-.746.018-1.373.276-1.88.773-.506.498-.769 1.13-.786 1.894v7.52c.017.764.28 1.395.786 1.893.507.498 1.134.756 1.88.773h13.334c.746-.017 1.373-.275 1.88-.773.506-.498.769-1.129.786-1.893v-7.52c-.017-.765-.28-1.396-.786-1.894-.507-.497-1.134-.755-1.88-.773zM8 11.107c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c0-.373.129-.689.386-.947.258-.257.574-.386.947-.386zm8 0c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c.017-.391.15-.711.4-.96.249-.249.56-.373.933-.373Z"/>
+        </svg>
+    </a>
+</div>
+
+<div style="text-align: center">
+    <h1><font face="verdana">我是钢板</font></h1>
+    <a>点击狐狐，开始计数</a>
+    <h2>You: <font face="verdana" id="count">0</font> | Global: <font face="verdana" id="total">{{ . }}</font></h2>
+</div>
+<div id="fox">
+</div>
+</body>
+<script>
+    var count = 0;
+    var d_count = 0;
+    const waves = ['/src/thats-steel-plate.mp3', '/src/dont-touch.mp3', '/src/steel-plate.mp3'];
+
+    function getRandomInt(max) {
+        return Math.floor(Math.random() * max);
+    }
+    function shout() {
+        count++;
+        d_count++;
+        document.getElementById("count").innerHTML = count;
+        const audio = new Audio(waves[getRandomInt(waves.length)]);
+        audio.play();
+        document.getElementById("total").innerHTML = parseInt(document.getElementById("total").innerHTML, 10) + 1;
+    }
+    function submit() {
+        const d_count_tmp = d_count;
+        d_count = 0;
+        const request = new Request('/submit', {
+            method: 'POST',
+            body: d_count_tmp
+        });
+        fetch(request)
+        .then((response) => response.json())
+        .then(function(data) {
+            if (typeof data.total === 'undefined') {
+                alert('Error submitting data and refresh total clicks!');
+            } else {
+                document.getElementById("total").innerHTML = data.total;
+            }
+        });
+    }
+    document.getElementById("fox").addEventListener("click", shout);
+    setInterval(submit, 5 * 1000);
+
+
+
+</script>
+</html>
