@@ -1,22 +1,17 @@
 use gtmpl;
-use infer;
 use lazy_static;
 use minify_html;
 use tokio;
 
 use async_once::AsyncOnce;
-use hyper::body::HttpBody;
+use hegel::http;
+use lambda_runtime::{service_fn, Error};
 use rust_embed::RustEmbed;
-use std::borrow::Cow;
-use std::cmp::min;
 
 // aws SDK
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_dynamodb::model::{AttributeAction, AttributeValue, AttributeValueUpdate, ReturnValue};
 use aws_sdk_dynamodb::Client;
-
-// lambda runtime
-use lambda_http::{http, lambda_runtime::Error, service_fn, Body, Request, Response};
 
 struct DBClient {
     client: Client,
@@ -43,71 +38,68 @@ struct Asset;
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     // lambda run
-    lambda_http::run(service_fn(handle)).await?;
+    lambda_runtime::run(service_fn(handle)).await?;
     Ok(())
 }
 
 // lambda handler
-async fn handle(_req: Request) -> http::Result<Response<Body>> {
-    // get uri
-    let uri = _req.uri().clone();
-    // get && refine path
-    let path = uri.path().trim_start_matches("/prod");
+async fn handle(evt: http::Event) -> Result<http::Response, Error> {
+    // get path
+    let path = evt.payload.path();
 
     // GET /src/*
-    if path.starts_with("/src/") && _req.method().as_str() == "GET" {
+    if path.starts_with("/src/") && evt.payload.method().as_str() == "GET" {
         // get relative path
         let ass = Asset::get(path.trim_start_matches("/"));
         if ass.is_none() {
-            return not_found_resp(Some(path));
+            return Ok(http::Response::new_status(404));
         }
         let ass = ass.unwrap();
         // return file
-        return file_resp(ass.data);
+        return Ok(http::Response::new_file(ass.data.into()).header(
+            "Cache-Control".to_string(),
+            "public, max-age=6048000, immutable".to_string(),
+        ));
     }
 
-    return match (path, _req.method().as_str()) {
+    return match (path.as_str(), evt.payload.method().as_str()) {
         // GET /
         ("/", "GET") => {
             // get current total clicks
             let total = DB_CLIENT.get().await.get_total().await;
             if total.is_err() {
                 eprintln!("Error getting total: {}", total.unwrap_err());
-                return server_err_resp();
+                return Ok(http::Response::new_status(500));
             }
             // render index
             let index = gtmpl::template(INDEX.as_str(), total.unwrap()).unwrap();
-            html_resp(index.as_str())
+            Ok(http::Response::new_html(index))
         }
         // POST /submit
         ("/submit", "POST") => {
-            // get user body data
-            let body = _req.into_body().data().await;
-            // has body
-            if body.is_some() {
-                let body = body.unwrap();
-                // body okay
-                if body.is_ok() {
+            let body = evt.payload.body();
+            // body not error
+            if body.is_ok() {
+                let body = body.unwrap_or(None);
+                // body not none
+                if body.is_none() {
                     let body = body.unwrap();
-                    let body = String::from_utf8(body.to_vec());
-                    // able to convert to utf-8
-                    if body.is_ok() {
-                        let d_count = body.unwrap().parse::<u32>();
-                        // able to parse as u32
-                        if d_count.is_ok() {
-                            let d_count = d_count.unwrap();
-                            // adequate number
-                            if d_count > 0 && d_count < 100 {
-                                let total = DB_CLIENT.get().await.total_add(d_count).await;
-                                if total.is_err() {
-                                    eprintln!("Error getting total: {}", total.unwrap_err());
-                                    return server_err_resp();
-                                }
-                                return json_resp(
-                                    format!("{{\"total\": {}}}", total.unwrap().to_string())
-                                        .as_str(),
-                                );
+
+                    let d_count = body.parse::<u32>();
+                    // able to parse as u32
+                    if d_count.is_ok() {
+                        let d_count = d_count.unwrap();
+                        // adequate number
+                        if d_count > 0 && d_count < 100 {
+                            let total = DB_CLIENT.get().await.total_add(d_count).await;
+                            if total.is_err() {
+                                eprintln!("Error getting total: {}", total.unwrap_err());
+                                return Ok(http::Response::new_status(500));
                             }
+                            return Ok(http::Response::new_json(format!(
+                                "{{\"total\": {}}}",
+                                total.unwrap().to_string()
+                            )));
                         }
                     }
                 }
@@ -115,12 +107,15 @@ async fn handle(_req: Request) -> http::Result<Response<Body>> {
             let total = DB_CLIENT.get().await.get_total().await;
             if total.is_err() {
                 eprintln!("Error getting total: {}", total.unwrap_err());
-                return server_err_resp();
+                return Ok(http::Response::new_status(500));
             }
-            json_resp(format!("{{\"total\": {}}}", total.unwrap().to_string()).as_str())
+            Ok(http::Response::new_json(format!(
+                "{{\"total\": {}}}",
+                total.unwrap().to_string()
+            )))
         }
         // *
-        _ => not_found_resp(Some(path)),
+        _ => Ok(http::Response::new_status(404)),
     };
 }
 
@@ -139,56 +134,6 @@ fn get_index() -> String {
     let minified = minify_html::minify(index_str.as_bytes(), &cfg);
     let index = std::str::from_utf8(minified.as_slice()).expect("Error parsing from minified html");
     index.to_string()
-}
-
-// response binary file
-fn file_resp(b: Cow<'static, [u8]>) -> http::Result<Response<Body>> {
-    let mut resp = Response::builder()
-        .status(200)
-        .header("Cache-Control", "public, max-age=6048000, immutable");
-    let buf = b.get(0..min(31, b.len()));
-    if buf.is_some() {
-        let ct = infer::get(buf.unwrap()).map(|t| t.to_string());
-        if ct.is_some() {
-            resp = resp.header("Content-Type", ct.unwrap());
-        }
-    }
-    resp.body(Body::Binary(b.to_vec()))
-}
-
-// response json
-fn json_resp(b: &str) -> http::Result<Response<Body>> {
-    let resp = Response::builder()
-        .status(200)
-        .header("Content-Type", "application/json");
-    resp.body(Body::from(b))
-}
-
-// response html
-fn html_resp(b: &str) -> http::Result<Response<Body>> {
-    let resp = Response::builder()
-        .status(200)
-        .header("Content-Type", "text/html; charset=UTF-8");
-    resp.body(Body::from(b))
-}
-
-// return 404 Not Found
-fn not_found_resp(path: Option<&str>) -> http::Result<Response<Body>> {
-    let body: Body = Body::from("404 Not Found");
-    if path.is_some() {
-        Some(Body::from(format!(
-            "404 Not Found (path: \"{}\")",
-            path.unwrap()
-        )));
-    }
-    let resp = Response::builder().status(404);
-    resp.body(body)
-}
-
-// return 500 Internal Server Error
-fn server_err_resp() -> http::Result<Response<Body>> {
-    let resp = Response::builder().status(500);
-    resp.body(Body::from("500 Internal Server Error"))
 }
 
 impl DBClient {
