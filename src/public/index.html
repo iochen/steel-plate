@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>我是钢板！</title>
+    <title>POPFOX</title>
     <meta name="description" content="我是雪狐，我是钢板！">
     <meta name="keywords" content="雪狐, 雪狐桑, 钢板">
     <link rel="preload" as="image" href="/src/fox_style_a.webp">
@@ -53,6 +53,16 @@
             width: 8em;
             padding: 1em;
         }
+        .cap {
+            position: absolute;
+            left: 1em;
+            bottom: 1em;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 0.3em;
+            padding: 0.5em;
+            cursor: pointer;
+        }
         @media only screen and (max-width: 600px) {
             .icon-size {
                 height: 3em;
@@ -83,17 +93,27 @@
 </div>
 
 <div style="text-align: center">
-    <h1><font face="verdana">我是钢板</font></h1>
+    <h1><font face="verdana">POPFOX</font></h1>
     <a>点击狐狐，开始计数</a>
     <h2>You: <font face="verdana" id="count">0</font> | Global: <font face="verdana" id="total">{{ . }}</font></h2>
 </div>
 <div id="fox">
 </div>
+<div class="cap" id="sound-effect">
+    <a>当前音效：狐狐的自述 ｜ 点击更换</a>
+</div>
 </body>
 <script>
     var count = 0;
     var d_count = 0;
-    const waves = ['/src/thats-steel-plate.mp3', '/src/dont-touch.mp3', '/src/steel-plate.mp3'];
+    var mental_hit = false;
+    const waves = ['/src/thats-steel-plate.mp3', '/src/dont-touch.mp3', '/src/steel-plate.mp3', '/src/im-steel-plate.mp3'];
+    const hit_wave = ['/src/metal-hit.mp3'];
+
+    const el_fox = document.getElementById("fox");
+    const el_count = document.getElementById("count");
+    const el_total = document.getElementById("total");
+    const el_sound_effect = document.getElementById("sound-effect");
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
@@ -101,10 +121,10 @@
     function shout() {
         count++;
         d_count++;
-        document.getElementById("count").innerHTML = count;
-        const audio = new Audio(waves[getRandomInt(waves.length)]);
+        el_count.innerHTML = count;
+        const audio = new Audio(mental_hit?hit_wave[getRandomInt(hit_wave.length)]:waves[getRandomInt(waves.length)]);
         audio.play();
-        document.getElementById("total").innerHTML = parseInt(document.getElementById("total").innerHTML, 10) + 1;
+        el_total.innerHTML = parseInt(el_total.innerHTML, 10) + 1;
     }
     function submit() {
         const d_count_tmp = d_count;
@@ -119,14 +139,19 @@
             if (typeof data.total === 'undefined') {
                 alert('Error submitting data and refresh total clicks!');
             } else {
-                document.getElementById("total").innerHTML = data.total;
+                el_total.innerHTML = data.total;
             }
         });
     }
-    const fox = document.getElementById("fox");
+
+    function toggle_sound_effect() {
+        mental_hit = !mental_hit;
+        el_sound_effect.innerHTML = mental_hit?"<a>当前音效：钢板的撞击 ｜ 点击更换</a>":"<a>当前音效：狐狐的自述 ｜ 点击更换</a>"
+    }
     fox.addEventListener("click", shout);
     fox.addEventListener('touchstart', function() { fox.classList.add("fox-active") });
     fox.addEventListener('touchend', function() { fox.classList.remove("fox-active") });
+    el_sound_effect.addEventListener("click", toggle_sound_effect);
     setInterval(submit, 5 * 1000);
 
 
